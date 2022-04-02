@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+
+function list () {
+  const cp = require('child_process')
+  const emojiIndex = require('unicode-emoji-json')
+
+  const emojiList = Object.keys(emojiIndex)
+
+  const needVariationSelector = emojiList
+    .filter(emoji => emoji.endsWith('\ufe0f'))
+    .map(emoji => emoji.replace('\ufe0f', ''))
+
+  const regex = `(${needVariationSelector.join('|')})\ufe0f?`
+
+  const rg1 = cp.spawn('rg', ['-o', regex, ...process.argv.slice(2)], { stdio: ['ignore', 'pipe', 'inherit'] })
+  const rg2 = cp.spawn('rg', ['-v', '\ufe0f'], { stdio: [rg1.stdout, 'inherit', 'inherit'] })
+}
+
+function fix () {
+  const fs = require('fs')
+  const readline = require('readline')
+
+  const rl = readline.createInterface({
+    input: process.stdin
+  })
+
+  rl.on('line', line => {
+    const [path, emoji] = line.split(':')
+
+    const data = fs.readFileSync(path, 'utf8')
+    const colorEmoji = `${emoji}\ufe0f`
+
+    // Double replace to avoid adding taice the color selector
+    fs.writeFileSync(path, data.replaceAll(colorEmoji, emoji).replaceAll(emoji, colorEmoji))
+
+    console.log(`Wrote ${path}`)
+  })
+}
+
+if (process.argv[2] === '--fix') {
+  fix()
+} else {
+  list()
+}
