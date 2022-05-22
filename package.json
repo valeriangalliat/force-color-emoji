@@ -1,5 +1,11 @@
 {
+  "scripts": {
+    "lint": "standard force-color-emoji"
+  },
   "dependencies": {
     "unicode-emoji-json": "^0.3.1"
+  },
+  "devDependencies": {
+    "standard": "^17.0.0"
   }
 }

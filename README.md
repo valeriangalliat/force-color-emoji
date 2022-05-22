@@ -34,7 +34,8 @@ brew install ripgrep
 ## Usage
 
 ```
-force-color-emoji (--fix | [<path>...])
+force-color-emoji [<path>...] [--fix-all]
+force-color-emoji --fix
 ```
 
 To list files that contain emoji missing the variation selector:
@@ -50,10 +51,16 @@ prefer:
 force-color-emoji ~/blog
 ```
 
-Fix the identified emoji:
+Fix all the identified emoji:
 
 ```
-force-color-emoji | force-color-emoji --fix
+force-color-emoji --fix-all
+```
+
+Fix a subset of emoji:
+
+```
+force-color-emoji | grep ... | force-color-emoji --fix
 ```
 
 ## Example
@@ -65,19 +72,8 @@ posts.md:🏕
 2021/09/totp-2fa-support-any-password-manager.md:🐿
 2021/10/tent-sleeping-bag-packed-wet.md:🏕
 2021/11/emoji-variation-selector.md:☹
-2021/11/emoji-variation-selector.md:☹
-2021/11/emoji-variation-selector.md:✍
-2021/11/emoji-variation-selector.md:✍
-2021/11/emoji-variation-selector.md:☹
-2021/11/emoji-variation-selector.md:☹
-2021/11/emoji-variation-selector.md:✍
 2021/11/emoji-variation-selector.md:✍
 2021/11/homebrew-multi-user.md:✌
-2021/05/macos-screen-recording-with-system-audio.md:🎚
-2021/05/macos-screen-recording-with-system-audio.md:🎚
-2021/05/macos-screen-recording-with-system-audio.md:🎛
-2021/05/macos-screen-recording-with-system-audio.md:🎚
-2021/05/macos-screen-recording-with-system-audio.md:🎛
 2021/05/macos-screen-recording-with-system-audio.md:🎚
 2021/05/macos-screen-recording-with-system-audio.md:🎛
 
@@ -87,11 +83,6 @@ posts.md:🏕
 2021/10/tent-sleeping-bag-packed-wet.md:🏕
 2021/11/homebrew-multi-user.md:✌
 2021/05/macos-screen-recording-with-system-audio.md:🎚
-2021/05/macos-screen-recording-with-system-audio.md:🎚
-2021/05/macos-screen-recording-with-system-audio.md:🎛
-2021/05/macos-screen-recording-with-system-audio.md:🎚
-2021/05/macos-screen-recording-with-system-audio.md:🎛
-2021/05/macos-screen-recording-with-system-audio.md:🎚
 2021/05/macos-screen-recording-with-system-audio.md:🎛
 
 ~/blog $ force-color-emoji | grep -v '™' | grep -v 2021/11/emoji-variation-selector.md | force-color-emoji --fix
@@ -99,11 +90,5 @@ Wrote posts.md
 Wrote 2021/09/totp-2fa-support-any-password-manager.md
 Wrote 2021/10/tent-sleeping-bag-packed-wet.md
 Wrote 2021/11/homebrew-multi-user.md
-Wrote 2021/05/macos-screen-recording-with-system-audio.md
-Wrote 2021/05/macos-screen-recording-with-system-audio.md
-Wrote 2021/05/macos-screen-recording-with-system-audio.md
-Wrote 2021/05/macos-screen-recording-with-system-audio.md
-Wrote 2021/05/macos-screen-recording-with-system-audio.md
-Wrote 2021/05/macos-screen-recording-with-system-audio.md
 Wrote 2021/05/macos-screen-recording-with-system-audio.md
 ```

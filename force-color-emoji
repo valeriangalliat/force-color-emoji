@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-function list () {
+function listImpl (paths, cb) {
   const cp = require('child_process')
+  const readline = require('readline')
   const emojiIndex = require('unicode-emoji-json')
 
   const emojiList = Object.keys(emojiIndex)
@@ -12,33 +13,97 @@ function list () {
 
   const regex = `(${needVariationSelector.join('|')})\ufe0f?`
 
-  const rg1 = cp.spawn('rg', ['-o', regex, ...process.argv.slice(2)], { stdio: ['ignore', 'pipe', 'inherit'] })
-  const rg2 = cp.spawn('rg', ['-v', '\ufe0f'], { stdio: [rg1.stdout, 'inherit', 'inherit'] })
+  const rg1 = cp.spawn('rg', ['-o', regex, ...paths], { stdio: ['ignore', 'pipe', 'inherit'] })
+  const rg2 = cp.spawn('rg', ['-v', '\ufe0f'], { stdio: [rg1.stdout, 'pipe', 'inherit'] })
+
+  const rl = readline.createInterface({
+    input: rg2.stdout
+  })
+
+  const index = {}
+
+  rl.on('line', line => {
+    const [path, emoji] = line.split(':')
+
+    index[path] = index[path] || {}
+    index[path][emoji] = true
+  })
+
+  rl.on('close', () => cb(index))
+}
+
+function list (paths) {
+  listImpl(paths, index => {
+    for (const path of Object.keys(index)) {
+      for (const emoji of Object.keys(index[path])) {
+        console.log([path, emoji].join(':'))
+      }
+    }
+  })
+}
+
+function fixImpl (index) {
+  const fs = require('fs')
+
+  for (const path of Object.keys(index)) {
+    let data = fs.readFileSync(path, 'utf8')
+
+    for (const emoji of Object.keys(index[path])) {
+      const colorEmoji = `${emoji}\ufe0f`
+
+      // Double replace to avoid adding twice the color selector
+      data = data.replaceAll(colorEmoji, emoji).replaceAll(emoji, colorEmoji)
+    }
+
+    fs.writeFileSync(path, data)
+    console.log(`Wrote ${path}`)
+  }
 }
 
 function fix () {
-  const fs = require('fs')
   const readline = require('readline')
 
   const rl = readline.createInterface({
     input: process.stdin
   })
 
+  const index = {}
+
   rl.on('line', line => {
     const [path, emoji] = line.split(':')
 
-    const data = fs.readFileSync(path, 'utf8')
-    const colorEmoji = `${emoji}\ufe0f`
+    index[path] = index[path] || {}
+    index[path][emoji] = true
+  })
 
-    // Double replace to avoid adding taice the color selector
-    fs.writeFileSync(path, data.replaceAll(colorEmoji, emoji).replaceAll(emoji, colorEmoji))
-
-    console.log(`Wrote ${path}`)
+  rl.on('close', () => {
+    fixImpl(index)
   })
 }
 
-if (process.argv[2] === '--fix') {
-  fix()
-} else {
-  list()
+function fixAll (paths) {
+  listImpl(paths, fixImpl)
 }
+
+function main () {
+  const argv = process.argv.slice(2)
+
+  if (argv[0] === '--help') {
+    console.log(`Usage: force-color-emoji [<path>...] [--fix-all]
+        force-color-emoji --fix`)
+
+    return
+  }
+
+  if (argv[0] === '--fix') {
+    return fix()
+  }
+
+  if (argv.includes('--fix-all')) {
+    return fixAll(argv.filter(arg => arg !== '--fix-all'))
+  }
+
+  list(argv)
+}
+
+main()
